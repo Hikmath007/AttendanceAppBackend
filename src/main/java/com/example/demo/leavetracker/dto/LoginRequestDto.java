@@ -1,0 +1,11 @@
+package com.example.demo.leavetracker.dto;
+
+import lombok.Data;
+
+@Data
+public class LoginRequestDto {
+	
+	private String email;
+	private String password;
+
+}

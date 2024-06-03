@@ -1,7 +1,9 @@
 package com.example.demo.leavetracker.dto;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
+
+import org.springframework.format.annotation.DateTimeFormat;
 
 import lombok.Data;
 
@@ -10,7 +12,9 @@ import lombok.Data;
 public class AttendanceDto {
 	private Long attendanceId;
 
-    private Date date;
+	
+	@DateTimeFormat(pattern = "yyyy-MM-dd")
+    private LocalDate date;
     
     private String attendanceStatus;
     

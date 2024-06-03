@@ -1,6 +1,6 @@
 package com.example.demo.leavetracker.entity;
-import java.time.LocalDateTime;
-import java.util.Date;
+import java.time.LocalDate;
+
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -19,7 +19,7 @@ public class AttendanceEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long attendanceId;
 
-    private Date date;
+    private LocalDate date;
     
     @Enumerated(EnumType.STRING)
     private AttendanceStatus attendanceStatus;
@@ -31,9 +31,9 @@ public class AttendanceEntity {
     @JoinColumn(name = "employeeId")
     private EmployeeEntity employee;
     
-    private LocalDateTime loginTime;
+    private LocalDate loginTime;
     
-    private LocalDateTime logoutTime;
+    private LocalDate logoutTime;
     
     private String ipv4Address;
 

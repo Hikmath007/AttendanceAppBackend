@@ -13,11 +13,11 @@ import com.example.demo.leavetracker.dto.CalendarDateDto;
 @Service
 public class CalendarService {
 
-	public List<CalendarDateDto> getCalendarDates(LocalDate startDate, LocalDate endDate) {
+	public List<CalendarDateDto> getCalendarDates(LocalDate startDate) {
         List<CalendarDateDto> calendarDates = new ArrayList<>();
         LocalDate date = startDate;
 
-        while (!date.isAfter(endDate)) {
+        while (date.getMonthValue() == startDate.getMonthValue()) {
             String dayOfWeek = date.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH);
             String month = date.getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH);
             int year = date.getYear();
@@ -29,5 +29,7 @@ public class CalendarService {
 
         return calendarDates;
     }
+
+	
 
 }

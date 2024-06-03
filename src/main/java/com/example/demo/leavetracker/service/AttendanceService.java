@@ -11,6 +11,7 @@ import com.example.demo.leavetracker.dto.EmployeeDto;
 import com.example.demo.leavetracker.entity.AttendanceEntity;
 import com.example.demo.leavetracker.entity.AttendanceStatus;
 import com.example.demo.leavetracker.entity.EmployeeEntity;
+import com.example.demo.leavetracker.exceptions.AttendanceAlreadyExistsException;
 import com.example.demo.leavetracker.exceptions.ResourceNotFoundException;
 import com.example.demo.leavetracker.mapper.AttendanceMapper;
 import com.example.demo.leavetracker.mapper.EmployeeMapper;
@@ -35,26 +36,61 @@ public class AttendanceService {
 	@Autowired
 	private AttendanceMapper attendanceMapper;
 
-	public AttendanceDto createAttendance(AttendanceDto attendanceDto, Long employeeId) {
-		log.info("Creating a new Attendance...");
+	
+	/** Marking or Creating a new attendance**/
+
+	public AttendanceDto MarkAttendance(AttendanceDto attendanceDto, Long employeeId) {
+		log.info("marking  a new Attendance...");
+
+		// Find the employee by ID or throw an exception if not found
 		EmployeeEntity employeeEntity = employeeRepo.findById(employeeId)
-				.orElseThrow(() -> new ResourceNotFoundException("EmployeeEntity", " employeeId ", employeeId));
-		EmployeeDto employeeDto = employeeMapper.toDto(employeeEntity);
+				.orElseThrow(() -> new ResourceNotFoundException("EmployeeEntity", "employeeId", employeeId));
 
 		log.info("Employee found: {}", employeeId);
 
+		// Check if attendance already exists for the employee and date
+		Optional<AttendanceEntity> existingAttendanceOptional = attendanceRepo.findByEmployeeAndDate(employeeEntity,
+				attendanceDto.getDate());
+
+		if (existingAttendanceOptional.isPresent()) {
+			// Attendance already exists for the employee on the given date, throw an error
+			throw new AttendanceAlreadyExistsException(
+					"Attendance already created for employee with ID " + employeeId + " on " + attendanceDto.getDate());
+		}
+
+		// Attendance record doesn't exist, proceed with creation
 		AttendanceEntity attendance = attendanceMapper.toEntity(attendanceDto);
 		attendance.setEmployee(employeeEntity);
-		// we will return this below
-		log.info("Converted Course: {}", attendance);
 
+		// Save attendance record
 		AttendanceEntity newAttendance = attendanceRepo.save(attendance);
 		AttendanceDto newAttendanceDto = attendanceMapper.toDto(newAttendance);
 		newAttendanceDto.setEmployeeId(employeeId);
 		return newAttendanceDto;
 	}
-
 	
+	/**updating the attendanceStatus**/
+	public boolean updateAttendance(AttendanceDto attendanceDto, Long employeeId) {
+	    // Find the employee by ID or throw an exception if not found
+	    EmployeeEntity employeeEntity = employeeRepo.findById(employeeId)
+	            .orElseThrow(() -> new ResourceNotFoundException("EmployeeEntity", "employeeId", employeeId));
+
+	    // Find existing attendance record for the employee and date, if any
+	    Optional<AttendanceEntity> attendanceOptional = attendanceRepo.findByEmployeeAndDate(employeeEntity, attendanceDto.getDate());
+	    
+	    if (attendanceOptional.isPresent()) {
+	        // Attendance record exists, update its status
+	        AttendanceEntity attendance = attendanceOptional.get();
+	        attendance.setAttendanceStatus(AttendanceStatus.valueOf(attendanceDto.getAttendanceStatus()));
+	        attendanceRepo.save(attendance);
+	        return true; // Attendance status updated
+	    } else {
+	        // Attendance record does not exist, no action needed
+	        return false; 
+	    }
+	}
+
+
 	public void deleteAttendance(Long attendanceId) {
 		AttendanceEntity attendance = attendanceRepo.findById(attendanceId)
 				.orElseThrow(() -> new ResourceNotFoundException("AttendanceMapper", "attendanceid", attendanceId));
@@ -81,21 +117,6 @@ public class AttendanceService {
 		return attendances.stream().map(attendance -> attendanceMapper.toDto(attendance)).toList();
 	}
 
-	public boolean markAttendanceStatus(AttendanceDto attendanceDto) {
-		try {
-			Optional<AttendanceEntity> attendanceOptional = attendanceRepo.findByDate(attendanceDto.getDate());
-			AttendanceEntity attendance = attendanceOptional.isPresent() ? attendanceOptional.get()
-					: new AttendanceEntity();
-			log.info("Attendance Entity: {}", attendance);
-
-			attendance.setDate(attendanceDto.getDate());
-			attendance.setAttendanceStatus(AttendanceStatus.valueOf(attendanceDto.getAttendanceStatus()));
-			attendanceRepo.save(attendance);
-			return true;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
-		}
-	}
+	
 
 }
